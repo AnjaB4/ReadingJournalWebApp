@@ -1,0 +1,29 @@
+.bg-scifi {
+    background-color: #64ad91; /* rezedo #75b39b ili #5ccfa3 ili #5c9f85 ili #64ad91 */
+    color: #fff;
+}
+.bg-fantasy {
+    background-color: #179c9c; /* teal #1cc0c0 ili #179c9c*/
+    color: #fff;
+}
+.bg-romance {
+    background-color: #e83e8c; /* roze */
+    color: #fff;
+}
+.bg-literary {
+    background-color: #ccaa03; /* prljavo žuta */
+    color: #fff;
+}
+.bg-classic {
+    background-color: #60be14; /* zelena #60be14 ili #53b303*/
+    color: #fff;
+}
+.bg-philosophy {
+    background-color: #5b98a8; /* prljavo plava #725ba8 ili #5b98a8*/
+    color: #fff;
+}
+.bg-historical {
+    background-color: #ce9e7b; /* krem */
+    color: #fff;
+}
+

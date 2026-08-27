@@ -1,0 +1,18 @@
+{
+    "name": "anja/reading-journal-vbis",
+    "autoload": {
+        "psr-4": {
+            "app\\": "./"
+        }
+    },
+    "authors": [
+        {
+            "name": "anja",
+            "email": "anja.busic.23@singimail.rs"
+        }
+    ],
+    "require": {
+        "ext-json": "*",
+        "ext-mysqli": "*"
+    }
+}

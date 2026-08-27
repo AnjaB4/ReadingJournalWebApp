@@ -1,0 +1,67 @@
+input[type=checkbox] {
+    visibility: hidden;
+}
+
+.custom {
+    position: relative;
+    margin-bottom: 6px;
+
+    display: inline-block;
+}
+.form-group .custom {
+    width: 25%; /* 100% / 5 = 20% -> staje 5 u redu */
+}
+
+.custom label {
+    cursor: pointer;
+    position: relative;
+    padding-left: 28px;
+    line-height: 20px;
+    top: 0;
+    -webkit-appearance: none;
+    /*border: double 2px #8C8C8C;*/
+    background-color:white;
+    color: #085959;
+    white-space: nowrap;
+   /* width:35px;
+    height:35px;*/
+
+}
+
+.custom label:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 18px;
+    height: 18px;
+    border: double 2px #8C8C8C;
+    background: white;
+
+    /* kvačica */
+    background-image: none;
+}
+
+.custom label:hover::after {
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)";
+    filter: alpha(opacity=30);
+    opacity: 0.3;
+}
+.custom input[type=checkbox]:checked + label:after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 4px;
+    width: 8px;
+    height: 4px;
+    border: 3px solid #212529;
+    border-top: none;
+    border-right: none;
+    transform: rotate(-45deg);
+}
+
+.scroll-books {
+    width: 200px;
+    height: 150px;
+    overflow: scroll;
+}
