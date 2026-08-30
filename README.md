@@ -3,6 +3,10 @@ Reading Journal Web App
 A full-stack web application for tracking reading progress and managing books, as well as a motivational tool to encourage and maintain reading habits through gamification.
 Focused on wide range of users, taking into account personality differences regarding user's preferred mode of motivation.
 
+
+**Note:** Existing functionality is being gradually refactored to use services/ where needed.
+
+
 FEATURES:
 - User registration and login
 - Role-based access
