@@ -9,6 +9,7 @@ use app\models\TaskModel;
 use app\models\BookshelfModel;
 use app\models\UserAchievementTaskModel;
 use app\models\UserAchievementModel;
+use app\services\AchievementService;
 
 class AchievementController extends BaseController
 {
@@ -70,7 +71,13 @@ class AchievementController extends BaseController
 
         $model = new UserAchievementTaskModel();
         $taskModel = new TaskModel();
-        $userAchievementModel = new UserAchievementModel();
+
+        // napravi service
+        $achievementService = new AchievementService(
+            new UserAchievementModel(),
+            $model,
+            $taskModel
+        );
 
         foreach ($_POST as $task => $bookId) {
 
@@ -89,28 +96,15 @@ class AchievementController extends BaseController
             // pronadji achievement kojem ovaj task pripada
             $achievement = $taskModel->getAchievementForTask($taskId);
 
+            // koristimo service da sinkujemo progress ach.
             if ($achievement) {
                 
                 $achievementId = $achievement['id_achievement'];
 
-                // da li su svi taskovi zavrseni?
-                if ($model->isAchievementComplete($userId, $achievementId)) {
-
-                    // da li je achievement vec osvojen?
-                    $existingAchievement =
-                        $userAchievementModel->getAchievementForUser(
-                            $userId,
-                            $achievementId
-                        );
-
-                    // ako nije, dodaj ga korisniku
-                    if (!$existingAchievement) {
-                        $userAchievementModel->addToUser(
-                            $userId,
-                            $achievementId
-                        );
-                    }
-                }
+                $achievementService->syncAchievement(
+                    $userId,
+                    $achievementId
+                );
             }
         }
 
@@ -135,9 +129,31 @@ class AchievementController extends BaseController
         $userId = (int)$sessionUser[0]['id_user'];
         $taskId = (int)($_POST['task_id'] ?? 0);
 
+
+        $model = new UserAchievementTaskModel();
+        $taskModel = new TaskModel();
+
+        // kreiraj servis
+        $achievementService = new AchievementService(
+            new UserAchievementModel(),
+            $model,
+            $taskModel
+        );
+
         if ($taskId > 0) {
-            $model = new UserAchievementTaskModel();
-            $model->deleteTaskBook($userId, $taskId);
+            
+            $achievement = $taskModel->getAchievementForTask($taskId);
+
+            if($achievement) {
+                $achievementId = $achievement['id_achievement'];
+
+                $model->deleteTaskBook($userId, $taskId);
+
+                $achievementService->syncAchievement(
+                    $userId,
+                    $achievementId
+                );
+            }
         }
 
         Application::$app->session->set(

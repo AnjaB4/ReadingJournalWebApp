@@ -27,6 +27,7 @@ class UserAchievementModel extends BaseModel
     }
 
 
+    // SELECT
     // za proveru koji achievemneti su vec osvojeni
     public function getAchievementForUser(int $userId, int $achievementId): ?array
     {
@@ -40,6 +41,7 @@ class UserAchievementModel extends BaseModel
         return $dbResult->fetch_assoc() ?: null;
     }
 
+    // INSERT
     // ako je achievement ispunjen, dodeli ga tom korisniku; Controller ce kasnije da racuna XP
     public function addToUser(int $userId, int $achievementId)
     {
@@ -50,8 +52,9 @@ class UserAchievementModel extends BaseModel
 
         return $this->con->query($query);
     }
+    
 
-
+    // VALIDACIJA
     public function validationRules(): array
     {
         return [];

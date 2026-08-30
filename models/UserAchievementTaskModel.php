@@ -35,13 +35,33 @@ class UserAchievementTaskModel extends BaseModel
     public function getTaskForUser(int $userId, int $taskId): ?array
     {
         $query = "select *
-                from user_achievement_tasks
-                where id_user = $userId
-                    and id_task = $taskId";
+                    from user_achievement_tasks
+                    where id_user = $userId
+                        and id_task = $taskId";
 
         $result = $this->con->query($query);
 
         return $result->fetch_assoc() ?: null;
+    }
+
+    // pronadji sve taskove kojima je odredjena knjiga dodeljena
+    // zbog brisanja loga ---> brisanja task-a
+    public function getTasksForBook(int $userId, int $bookId): array
+    {
+        $query = "select *
+                    from user_achievement_tasks
+                    where id_user = $userId
+                        and id_book = $bookId";
+
+        $result = $this->con->query($query);
+
+        $tasks = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $tasks[] = $row;
+        }
+
+        return $tasks;
     }
 
     // dohvati SVE taskove usera iz baze za view
@@ -82,6 +102,20 @@ class UserAchievementTaskModel extends BaseModel
                     and id_task = $taskId";
         $this->con->query($query);
     }
+
+    //trenutan problem: brisanje loga ne brise task ako je taj log tu bio iskoriscen.
+    // obrisi sve redove u tabeli gde je user dodelio obrisani log odredjenom tasku
+    // Ako se obrise reading log za knjigu dodeljenu 1 ili vise
+    // taskova, obrisi te odabire
+    public function deleteCompletionOfTasksForBook(int $userId, int $bookId): void
+    {
+        $query = "delete from user_achievement_tasks
+                    where id_user = $userId
+                    and id_book = $bookId";
+        
+        $this->con->query($query);
+    }
+
 
     // Da li su svi taskovi zavrseni
     public function isAchievementComplete(int $userId, int $achievementId): bool

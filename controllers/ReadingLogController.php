@@ -7,6 +7,13 @@ use app\core\BaseController;
 use app\models\BookModel;
 use app\models\ReadingLogModel;
 
+use app\models\UserAchievementModel;
+use app\models\UserAchievementTaskModel;
+use app\models\TaskModel;
+
+use app\services\AchievementService;
+
+
 class ReadingLogController extends BaseController
 {
     // prikaz loga za trenutno ulogovanog korisnika
@@ -131,6 +138,25 @@ class ReadingLogController extends BaseController
 
         if (isset($_GET['id'])) {
             $id = (int)$_GET['id'];
+
+            //ucitaj log koji ce se obrisati
+            // zbog kaskadnog brisanja taska
+            $model->one("where id = $id");
+
+            $userId = $model->id_user;
+            $bookId = $model->id_book;
+    
+
+            //obavesti servis pre brisanja loga
+            $achievementService = new AchievementService(
+                new UserAchievementModel(),
+                new UserAchievementTaskModel(),
+                new TaskModel
+            );
+
+            $achievementService->handleBookRemoval($userId, $bookId);
+
+            // tek tad obrisi log
             $success = $model->delete("where id = $id");
 
             if ($success) {
