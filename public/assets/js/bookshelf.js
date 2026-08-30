@@ -19,14 +19,18 @@ const camera = new THREE.OrthographicCamera(
 camera.position.z = 10;
 
 // LIGHT  ---- za kasnije
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
-directionalLight.position.set(3, 5, 2);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
+directionalLight.position.set(2, 5, 6); // staro 3,5,2  
 scene.add(directionalLight);
 
-const fillLight = new THREE.DirectionalLight(0xffffff, 0.2);
+/*const coverLight = new THREE.PointLight(0xffffff, 0, 20);
+coverLight.position.set(5, 9, 10);
+scene.add(coverLight);*/
+
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
 fillLight.position.set(-5, 2, -2);
 scene.add(fillLight);
 
@@ -73,7 +77,6 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 
-
 const loader = new THREE.TextureLoader();
 
 // DIMENSIONS
@@ -90,7 +93,6 @@ const SPINE_DEPTH = 0.8;
 
 const BOOKS_PER_ROW = 25;
 const TOP_PADDING = 1.2;
-
 
 const totalHeight = NUM_SHELVES * (COVER_HEIGHT + SPACING_Y + SHELF_THICKNESS) + 2;
 
@@ -124,7 +126,6 @@ function createSpineTexture(title, bgColor = '#8b5a2b', textColor = '#ffffff') {
     canvas.height = 2048; //1024 old
      //326.50
 
-
     const ctx = canvas.getContext('2d');
 
     // background
@@ -152,6 +153,32 @@ function createSpineTexture(title, bgColor = '#8b5a2b', textColor = '#ffffff') {
     //return new THREE.CanvasTexture(canvas);
 }
 
+function createPaperTexture() {
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512; 
+    canvas.height = 512; 
+
+    const ctx = canvas.getContext('2d');
+
+    // osnovna boja papira
+    ctx.fillStyle = '#fae5ab'; // #f5eabc
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // ivice stranica detalji
+    ctx.strokeStyle = 'rgba(120, 100, 60, 0.66)';
+    ctx.lineWidth = 1;
+
+    for (let x = 5; x < canvas.height; x += 10) { // nacrtaj liniju svakih 10 piksela
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height); // preko celog kanvasa
+        ctx.stroke();
+    }
+
+    return new THREE.CanvasTexture(canvas);
+}
+
 
 // BOOKS
 
@@ -166,39 +193,47 @@ BOOKSHELF_DATA.forEach((book, index) => {
 
     // TODO: ako hoces flatShading kasnije, 
     // koristi MeshLambertMaterial ili MeshStandardMaterial
-// -------> nisam jos promenila mesh type, dodala rough i metalness, za sva 3 ispod materijala
-    const baseMaterial = new THREE.MeshBasicMaterial({
-        color,
-        //roughness: 0.85,
-        //metalness: 0.0,
+    // BACK COVER
+    const backCoverMaterial = new THREE.MeshStandardMaterial({
+        color: color,
+        roughness: 0.85,
+        metalness: 0
         //flatShading: true
     });
 
-    const spineMaterial = new THREE.MeshBasicMaterial({
+    // SPINE
+    const spineMaterial = new THREE.MeshStandardMaterial({
         map: createSpineTexture(book.title),
-        color: color   // keeps pastel tint
-       // roughness: 0.9,
-        //metalness: 0.0
+        color: color,   // keeps pastel tint
+        roughness: 0.2,
+        metalness: 0
     });
 
+    // COVER
     const coverTexture = loader.load(`/assets/covers/${book.cover_image}`);
-    const coverMaterial = new THREE.MeshBasicMaterial({
-        map: coverTexture
-        // roughness: 0.8,
-        //metalness: 0.0 
+    const coverMaterial = new THREE.MeshStandardMaterial({
+        map: coverTexture,
+        roughness: 0.05,
+        metalness: 0 
     });
 
-    const paperMaterial = new THREE.MeshBasicMaterial({
-        color: 0xf5eabc //f7f1d5, // beige paper color
+    // PAPER EDGES
+    const paperTexture = createPaperTexture();
+    const paperMaterial = new THREE.MeshStandardMaterial({
+        map: paperTexture,
+        //color: 0xf5ecd4,
+        roughness: 0.9,
+        metalness: 0
     }); 
 
+    // kada knjiga stoji uvucena na polici
     const materials = [
-        coverMaterial ?? baseMaterial,
-        baseMaterial,
-        paperMaterial, //
-        paperMaterial, //
-        spineMaterial,
-        paperMaterial  //
+        coverMaterial ?? baseMaterial,  // right
+        backCoverMaterial,              // left
+        paperMaterial,                  // top
+        paperMaterial,                  // bottom
+        spineMaterial,                  // front
+        paperMaterial                   // back
     ];
 
 
@@ -263,6 +298,7 @@ renderer.domElement.addEventListener('click', (event) => {
 
     const clickedBook = intersects[0].object;
     renderer.domElement.style.cursor = 'grabbing';
+    
     if (clickedBook.userData.isPulledOut) {
         gsap.to(clickedBook.position, {
             x: clickedBook.userData.originalPosition.x,
