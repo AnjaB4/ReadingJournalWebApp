@@ -21,6 +21,7 @@ const camera = new THREE.OrthographicCamera(
 );
 camera.position.z = 10;
 
+
 // LIGHT  ---- za kasnije
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.1); //0.6
 scene.add(ambientLight);
@@ -91,8 +92,38 @@ controls.touches = {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
-
+// TEXTURE LOADER
 const loader = new THREE.TextureLoader();
+
+
+// AUDIO
+const listener = new THREE.AudioListener(); // our "ears"
+camera.add( listener ); // add listener to camera
+
+// AUDIO LOADER
+// load a sound and set it as the Audio object's buffer
+const audioLoader = new THREE.AudioLoader();
+
+let pullAudioBuffer = null;
+//let returnAudioBuffer = null;
+
+function setupBookAudio(sound) {
+    if (pullAudioBuffer) {
+        sound.setBuffer(pullAudioBuffer);
+    }
+}
+
+audioLoader.load( '/assets/sounds/slide-out-book.wav', ( buffer ) => {
+	pullAudioBuffer = buffer;
+    //returnAudioBuffer = buffer;
+
+    books.forEach((book) => {
+        setupBookAudio(book.userData.pullSound);
+        setupBookAudio(book.userData.returnSound);
+    });
+});
+
+
 
 // DIMENSIONS
 const COVER_WIDTH = 0.8;
@@ -273,6 +304,29 @@ BOOKSHELF_DATA.forEach((book, index) => {
 
     const mesh = new THREE.Mesh(geometry, materials);
 
+    // AUDIO
+    const pullSound = new THREE.PositionalAudio(listener);
+    const returnSound = new THREE.PositionalAudio(listener);
+    
+    pullSound.setVolume(0.5); // osnovna jacina
+    pullSound.setRefDistance(2); // udaljenost pocetka smanjivanja jacine
+    pullSound.setRolloffFactor(1); // brzina opadanja
+   
+    returnSound.setVolume(0.5); 
+    returnSound.setRefDistance(2);
+    returnSound.setRolloffFactor(1);
+
+
+    mesh.add(pullSound);
+    mesh.add(returnSound);
+
+    mesh.userData.pullSound = pullSound;
+    mesh.userData.returnSound = returnSound;
+
+    setupBookAudio(pullSound);
+    setupBookAudio(returnSound);
+    
+
     // for pulling out books
     mesh.userData.isBook = true;
     //mesh.userData.originalPosition = mesh.position.clone();
@@ -322,6 +376,11 @@ renderer.domElement.addEventListener('click', (event) => {
     renderer.domElement.style.cursor = 'grabbing';
     
     if (clickedBook.userData.isPulledOut) {
+
+        if (!clickedBook.userData.returnSound.isPlaying) {
+            clickedBook.userData.returnSound.play();
+        }
+
         gsap.to(clickedBook.position, {
             x: clickedBook.userData.originalPosition.x,
             y: clickedBook.userData.originalPosition.y,
@@ -347,6 +406,10 @@ renderer.domElement.addEventListener('click', (event) => {
     }
 
     clickedBook.userData.isPulledOut = true;
+
+    if (!clickedBook.userData.pullSound.isPlaying) {
+        clickedBook.userData.pullSound.play();
+    }
 
     // pull out on z and rotate
     gsap.to(clickedBook.position, {
