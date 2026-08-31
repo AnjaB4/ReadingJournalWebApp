@@ -20,6 +20,8 @@ const camera = new THREE.OrthographicCamera(
     0.1, 1000
 );
 camera.position.z = 10;
+//camera.position.set(2, 1, 10);
+//camera.lookAt(0,0,0);
 
 
 // LIGHT  ---- za kasnije
@@ -105,21 +107,27 @@ camera.add( listener ); // add listener to camera
 const audioLoader = new THREE.AudioLoader();
 
 let pullAudioBuffer = null;
-//let returnAudioBuffer = null;
+let putAudioBuffer = null;
 
-function setupBookAudio(sound) {
-    if (pullAudioBuffer) {
-        sound.setBuffer(pullAudioBuffer);
+function setupBookAudio(sound, buffer) {
+    if (buffer) {
+        sound.setBuffer(buffer);
     }
 }
 
 audioLoader.load( '/assets/sounds/slide-out-book.wav', ( buffer ) => {
 	pullAudioBuffer = buffer;
-    //returnAudioBuffer = buffer;
 
     books.forEach((book) => {
-        setupBookAudio(book.userData.pullSound);
-        setupBookAudio(book.userData.returnSound);
+        setupBookAudio(book.userData.pullSound, pullAudioBuffer);
+    });
+});
+
+audioLoader.load( '/assets/sounds/book-close-2.wav', ( buffer ) => {
+	putAudioBuffer = buffer;
+
+    books.forEach((book) => {
+        setupBookAudio(book.userData.putSound, putAudioBuffer);
     });
 });
 
@@ -268,10 +276,10 @@ BOOKSHELF_DATA.forEach((book, index) => {
     coverTexture.minFilter = THREE.LinearMipmapLinearFilter;
     coverTexture.magFilter = THREE.LinearFilter;
     coverTexture.anisotropy = 4; 
-    ///////////////////////////////////
+
     const coverMaterial = new THREE.MeshStandardMaterial({
         map: coverTexture,
-        roughness: 0.35,
+        roughness: 0.3,
         metalness: 0
         //envMapIntensity: 0.2
     });
@@ -306,25 +314,25 @@ BOOKSHELF_DATA.forEach((book, index) => {
 
     // AUDIO
     const pullSound = new THREE.PositionalAudio(listener);
-    const returnSound = new THREE.PositionalAudio(listener);
+    const putSound = new THREE.PositionalAudio(listener);
     
     pullSound.setVolume(0.5); // osnovna jacina
     pullSound.setRefDistance(2); // udaljenost pocetka smanjivanja jacine
     pullSound.setRolloffFactor(1); // brzina opadanja
    
-    returnSound.setVolume(0.5); 
-    returnSound.setRefDistance(2);
-    returnSound.setRolloffFactor(1);
+    putSound.setVolume(0.7); 
+    putSound.setRefDistance(3);
+    putSound.setRolloffFactor(1);
 
 
     mesh.add(pullSound);
-    mesh.add(returnSound);
+    mesh.add(putSound);
 
     mesh.userData.pullSound = pullSound;
-    mesh.userData.returnSound = returnSound;
+    mesh.userData.putSound = putSound;
 
-    setupBookAudio(pullSound);
-    setupBookAudio(returnSound);
+    setupBookAudio(pullSound, pullAudioBuffer);
+    setupBookAudio(putSound, putAudioBuffer);
     
 
     // for pulling out books
@@ -377,15 +385,16 @@ renderer.domElement.addEventListener('click', (event) => {
     
     if (clickedBook.userData.isPulledOut) {
 
-        if (!clickedBook.userData.returnSound.isPlaying) {
-            clickedBook.userData.returnSound.play();
+        if (!clickedBook.userData.putSound.isPlaying) {
+            //clickedBook.userData.putSound.setPlaybackRate(1.1); // izbrisi ako je zvuk prebrz
+            clickedBook.userData.putSound.play();
         }
 
         gsap.to(clickedBook.position, {
             x: clickedBook.userData.originalPosition.x,
             y: clickedBook.userData.originalPosition.y,
             z: clickedBook.userData.originalPosition.z,
-            duration: 0.6,
+            duration: 0.7, // 0.6 ako treba bolje uskladiti sa zvukom, da bude malo brza animacija
             ease: "power1.out"
         });
 
@@ -393,7 +402,7 @@ renderer.domElement.addEventListener('click', (event) => {
             x: clickedBook.userData.originalRotation.x,
             y: clickedBook.userData.originalRotation.y,
             z: clickedBook.userData.originalRotation.z,
-            duration: 0.6,
+            duration: 0.7, // 0.6 ako treba bolje uskladiti sa zvukom
             ease: "power1.out",
             onComplete: () => {
             renderer.domElement.style.cursor = 'grab';
