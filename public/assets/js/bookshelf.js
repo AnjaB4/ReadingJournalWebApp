@@ -1,5 +1,7 @@
 import * as THREE from '/assets/libs/three/three.module.min.js';
 import { OrbitControls } from '/assets/libs/three/examples/jsm/controls/OrbitControls.js';
+import { RoomEnvironment } from '/assets/libs/three/examples/jsm/environments/RoomEnvironment.js';
+
 
 
 const container = document.getElementById('bookshelf-container');
@@ -9,6 +11,7 @@ const height = container.clientHeight || 600;
 // SCENE
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);
+//#0f0b0b
 
 // CAMERA
 const camera = new THREE.OrthographicCamera(
@@ -19,15 +22,19 @@ const camera = new THREE.OrthographicCamera(
 camera.position.z = 10;
 
 // LIGHT  ---- za kasnije
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.1); //0.6
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
-directionalLight.position.set(3, 5, 2);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);//3
+directionalLight.position.set(5, 3, 4); // staro 3,5,2  onda 2 5 6
 scene.add(directionalLight);
 
-const fillLight = new THREE.DirectionalLight(0xffffff, 0.2);
-fillLight.position.set(-5, 2, -2);
+/*const coverLight = new THREE.PointLight(0xffffff, 0, 20);
+coverLight.position.set(5, 9, 10);
+scene.add(coverLight);*/
+
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.2);//0.4
+fillLight.position.set(-5, 2, -2);//-5 2 -2
 scene.add(fillLight);
 
 
@@ -37,6 +44,18 @@ renderer.setSize(width, height);
 
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 container.appendChild(renderer.domElement);
+
+    // ENVIRONMENT
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    /* =Prefiltered, Mipmapped Environment Map; generates it from a cubeMap env. texture, for realistic object lighting
+        https://threejs.org/docs/#PMREMGenerator */
+    const environmentTexture = pmremGenerator.fromScene(new RoomEnvironment()).texture; 
+        // napravi novu sobu i pretvori njeno svetlo u teksturu
+
+    scene.environment = environmentTexture;
+    scene.environmentIntensity = 0.5; //0.6
+
+    pmremGenerator.dispose();
 
 renderer.domElement.style.display = 'inline-block';
 
@@ -73,7 +92,6 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 
-
 const loader = new THREE.TextureLoader();
 
 // DIMENSIONS
@@ -91,12 +109,15 @@ const SPINE_DEPTH = 0.8;
 const BOOKS_PER_ROW = 25;
 const TOP_PADDING = 1.2;
 
-
 const totalHeight = NUM_SHELVES * (COVER_HEIGHT + SPACING_Y + SHELF_THICKNESS) + 2;
 
 
 // SHELVES
-const shelfMaterial = new THREE.MeshBasicMaterial({ color: 0x3e2e1c });
+const shelfMaterial = new THREE.MeshStandardMaterial({
+    color: 0x3e2e1c,
+    roughness: 0.75,
+    metalness: 0
+});
 const shelfGeometry = new THREE.BoxGeometry(
     (SPINE_WIDTH + SPACING_X) * BOOKS_PER_ROW,
     SHELF_THICKNESS,
@@ -116,14 +137,13 @@ for (let i = 0; i < NUM_SHELVES; i++) {
     shelves.push(shelf);
 }
 
-
+// SPINE TEXTURE
 function createSpineTexture(title, bgColor = '#8b5a2b', textColor = '#ffffff') {
     
     const canvas = document.createElement('canvas');
     canvas.width = 512; //256 old
     canvas.height = 2048; //1024 old
      //326.50
-
 
     const ctx = canvas.getContext('2d');
 
@@ -153,6 +173,35 @@ function createSpineTexture(title, bgColor = '#8b5a2b', textColor = '#ffffff') {
 }
 
 
+// PAPER TEXTURE
+function createPaperTexture() {
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512; 
+    canvas.height = 512; 
+
+    const ctx = canvas.getContext('2d');
+
+    // osnovna boja papira
+    ctx.fillStyle = '#e1cb8d'; // #f5eabc
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // ivice stranica detalji
+    ctx.strokeStyle = 'rgba(104, 87, 53, 0.66)';
+    ctx.lineWidth = 1;
+
+    for (let x = 5; x < canvas.height; x += 12) { // nacrtaj liniju svakih 10 piksela
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height); // preko celog kanvasa
+        ctx.stroke();
+    }
+
+    return new THREE.CanvasTexture(canvas);
+}
+
+
+
 // BOOKS
 
 const books = [];
@@ -166,47 +215,55 @@ BOOKSHELF_DATA.forEach((book, index) => {
 
     // TODO: ako hoces flatShading kasnije, 
     // koristi MeshLambertMaterial ili MeshStandardMaterial
-// -------> nisam jos promenila mesh type, dodala rough i metalness, za sva 3 ispod materijala
-    const baseMaterial = new THREE.MeshBasicMaterial({
-        color,
-        //roughness: 0.85,
-        //metalness: 0.0,
+    // BACK COVER
+    const backCoverMaterial = new THREE.MeshStandardMaterial({
+        color: color,
+        roughness: 0.85,
+        metalness: 0
         //flatShading: true
     });
 
-    const spineMaterial = new THREE.MeshBasicMaterial({
+    // SPINE
+    const spineMaterial = new THREE.MeshStandardMaterial({
         map: createSpineTexture(book.title),
-        color: color   // keeps pastel tint
-       // roughness: 0.9,
-        //metalness: 0.0
+        color: color,   // keeps pastel tint
+        roughness: 0.25,
+        metalness: 0
     });
 
+    // COVER
     const coverTexture = loader.load(`/assets/covers/${book.cover_image}`);
-    const coverMaterial = new THREE.MeshBasicMaterial({
-        map: coverTexture
-        // roughness: 0.8,
-        //metalness: 0.0 
+    
+    coverTexture.minFilter = THREE.LinearMipmapLinearFilter;
+    coverTexture.magFilter = THREE.LinearFilter;
+    coverTexture.anisotropy = 4; 
+    ///////////////////////////////////
+    const coverMaterial = new THREE.MeshStandardMaterial({
+        map: coverTexture,
+        roughness: 0.35,
+        metalness: 0
+        //envMapIntensity: 0.2
     });
 
-    const paperMaterial = new THREE.MeshBasicMaterial({
-        color: 0xf5eabc //f7f1d5, // beige paper color
+    // PAPER EDGES
+    const paperTexture = createPaperTexture();
+    const paperMaterial = new THREE.MeshStandardMaterial({
+        map: paperTexture,
+        //color: 0xf5ecd4,
+        roughness: 0.9,
+        metalness: 0
     }); 
 
+    // kada knjiga stoji uvucena na polici
     const materials = [
-        coverMaterial ?? baseMaterial,
-        baseMaterial,
-        paperMaterial, //
-        paperMaterial, //
-        spineMaterial,
-        paperMaterial  //
+        coverMaterial ?? baseMaterial,  // right
+        backCoverMaterial,              // left
+        paperMaterial,                  // top
+        paperMaterial,                  // bottom
+        spineMaterial,                  // front
+        paperMaterial                   // back
     ];
 
-
-   /* const material = new THREE.MeshBasicMaterial({
-        map: spineTexture,
-        color: color,
-        flatShading: true
-    });*/
 
     const geometry = new THREE.BoxGeometry(
         SPINE_WIDTH,
@@ -263,6 +320,7 @@ renderer.domElement.addEventListener('click', (event) => {
 
     const clickedBook = intersects[0].object;
     renderer.domElement.style.cursor = 'grabbing';
+    
     if (clickedBook.userData.isPulledOut) {
         gsap.to(clickedBook.position, {
             x: clickedBook.userData.originalPosition.x,
