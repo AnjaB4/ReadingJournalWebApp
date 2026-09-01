@@ -49,9 +49,14 @@ use app\models\BookshelfModel;
 
     <div class="card-body px-0 pt-0 pb-2">
 
-        <!-- TODO Three.js za prikaz korica knjige umesto slike-->
                                                     <!--  mozda OVERFLOW NA scroll-->
-        <div id="bookshelf-container" style="width:100%; height:600px; overflow-y: auto; position: relative;"></div>
+        <div id="bookshelf-container" style="width:100%; height:600px; overflow-y: auto; position: relative;">
+            
+        </div>
+
+        <div id="book-context-menu">
+            <button id="examine-book-btn">Examine</button>
+        </div>
 
         <?php if (empty($books)): ?>
             <p class="text-muted mt-3">No finished books yet.</p>
@@ -64,8 +69,6 @@ use app\models\BookshelfModel;
     window.BOOKSHELF_DATA = <?= json_encode($books) ?>;
 </script>
 
-
-<script src="/assets/libs/gsap.min.js"></script>
 
 <script src="/assets/libs/gsap.min.js"></script>
 

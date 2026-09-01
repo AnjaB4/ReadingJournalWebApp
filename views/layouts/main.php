@@ -39,10 +39,13 @@ $roleLibrarian = Application::$app->session->isInRole('Librarian');
     <link href="../assets/css/custom-genres.css" rel="stylesheet">
     <!-- custom CSS za checkbox -->
     <link href="../assets/css/custom-checkbox.css" rel="stylesheet">
-    
-    <!-- custom CSS za level progression-->
+    <!-- custom CSS za level progression -->
     <link href="../assets/css/custom-levelbox.css" rel="stylesheet">
+    <!-- custom CSS za bookshelf stvari (context menu) -->
+    <link href="../assets/css/custom-bookshelf.css" rel="stylesheet">
     
+
+
     <!-- Toastr -->
     <link rel="stylesheet" href="../assets/js/plugins/toastr/toastr.min.css" />
     <script src="../assets/libs/jquery/dist/jquery.min.js"></script>

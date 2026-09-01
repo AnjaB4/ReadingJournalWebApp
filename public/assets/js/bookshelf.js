@@ -5,6 +5,8 @@ import { RoomEnvironment } from '/assets/libs/three/examples/jsm/environments/Ro
 
 
 const container = document.getElementById('bookshelf-container');
+const contextMenu = document.getElementById('book-context-menu');
+const examineButton = document.getElementById('examine-book-btn');
 const width = container.clientWidth;
 const height = container.clientHeight || 600;
 
@@ -93,6 +95,8 @@ controls.touches = {
 // RAYCASTER
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
+
+let contextMenuBook = null; //cuvaj knjigu za koju treba prikazati context menu
 
 // TEXTURE LOADER
 const loader = new THREE.TextureLoader();
@@ -368,6 +372,9 @@ BOOKSHELF_DATA.forEach((book, index) => {
 
 // on click
 renderer.domElement.addEventListener('click', (event) => {
+
+    contextMenu.style.display = 'none';
+    contextMenuBook = null;
     
     const rect = renderer.domElement.getBoundingClientRect();
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -437,6 +444,58 @@ renderer.domElement.addEventListener('click', (event) => {
           //  clickedBook.userData.isPulledOut = false;
         }
     });
+});
+
+
+// on right click
+renderer.domElement.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+
+    console.log("Context menu event");
+
+    const rect = renderer.domElement.getBoundingClientRect();
+
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    
+    console.log('Mouse:', mouse.x, mouse.y);
+
+    raycaster.setFromCamera(mouse, camera);
+/////////////////
+    const intersects = raycaster.intersectObjects(books);
+    console.log("Intersects:", intersects.length);
+
+    if (intersects.length === 0) {
+        return;
+    }
+
+    const rightClickedBook = intersects[0].object;
+
+    contextMenuBook = rightClickedBook;
+
+    contextMenu.style.left = `${event.clientX - rect.left}px`;
+    contextMenu.style.top = `${event.clientY - rect.top}px`;
+
+    contextMenu.style.display = 'block';
+
+    
+    console.log('Right-cliked book:', rightClickedBook);
+
+});
+
+// examine button click
+examineButton.addEventListener('click', () => {
+
+    if (!contextMenuBook) {
+        return;
+    }
+
+    const examinedBook = contextMenuBook;
+
+    contextMenu.style.display = 'none';
+    contextMenuBook = null;
+
+    console.log('Examining book: ', examinedBook);
 });
 
 
