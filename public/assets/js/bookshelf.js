@@ -384,171 +384,8 @@ BOOKSHELF_DATA.forEach((book, index) => {
 });
 
 
-// on click
-renderer.domElement.addEventListener('click', (event) => {
-
-    contextMenu.style.display = 'none';
-    contextMenuBook = null;
-    
-    const rect = renderer.domElement.getBoundingClientRect();
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-
-    const intersects = raycaster.intersectObjects(books);
-    if (intersects.length === 0) {
-        return; // no book clicked
-    }
-
-    const clickedBook = intersects[0].object;
-    renderer.domElement.style.cursor = 'grabbing';
-    
-    if (clickedBook.userData.isPulledOut) {
-
-        // ako je knjiga na koju se klikne ista kao i ona koja se istrazuje, dobijamo true, 
-        // sto znaci: vrati je na policu i postavi examined knjigu na null (jer knjiga je vracena nista se ne istrazuje, sada moze druga knjiga da dodje na red)
-        // ako ako je knjiga na koju se klikne drugacija od one koja se istrazuje, dobijamo false
-        // sto znaci ne ulazi u IF i examined je i dalje zauzet, ne mozemo da istrazujemo nijednu drugu knjigu dok ovu ne vratimo
-        if (clickedBook === currentlyExaminedBook) {
-            currentlyExaminedBook = null;
-            console.log('Currently examined:', currentlyExaminedBook);
-
-            // vrati kameru na prethodno stanje/ unzoom
-            gsap.to(camera.position, {
-                x: previousCameraPosition.x,
-                y: previousCameraPosition.y,
-                z: previousCameraPosition.z,
-                duration: 0.8,
-                ease: "power2.out",
-                onUpdate: () => {
-                    controls.update();
-                }
-            });
-
-            gsap.to(controls.target, {
-                x: previousControlsTarget.x,
-                y: previousControlsTarget.y,
-                z: previousControlsTarget.z,
-                duration: 0.8,
-                ease: "power2.out",
-                onUpdate: () => {
-                    controls.update();
-                }
-            });
-
-            gsap.to(camera, {
-                zoom: previousCameraZoom,
-                duration: 0.8,
-                ease: "power2.out",
-                onUpdate: () => {
-                    camera.updateProjectionMatrix();
-                }
-            });
-        }
-
-        if (!clickedBook.userData.putSound.isPlaying) {
-            //clickedBook.userData.putSound.setPlaybackRate(1.1); // izbrisi ako je zvuk prebrz
-            clickedBook.userData.putSound.play();
-        }
-
-        gsap.to(clickedBook.position, {
-            x: clickedBook.userData.originalPosition.x,
-            y: clickedBook.userData.originalPosition.y,
-            z: clickedBook.userData.originalPosition.z,
-            duration: 0.7, // 0.6 ako treba bolje uskladiti sa zvukom, da bude malo brza animacija
-            ease: "power1.out"
-        });
-
-        gsap.to(clickedBook.rotation, {
-            x: clickedBook.userData.originalRotation.x,
-            y: clickedBook.userData.originalRotation.y,
-            z: clickedBook.userData.originalRotation.z,
-            duration: 0.7, // 0.6 ako treba bolje uskladiti sa zvukom
-            ease: "power1.out",
-            onComplete: () => {
-            renderer.domElement.style.cursor = 'grab';
-        }
-        });
-
-        clickedBook.userData.isPulledOut = false;
-    
-        return; // already pulled out
-    }
-
-    clickedBook.userData.isPulledOut = true;
-
-    if (!clickedBook.userData.pullSound.isPlaying) {
-        clickedBook.userData.pullSound.play();
-    }
-
-    // pull out on z and rotate
-    gsap.to(clickedBook.position, {
-        z: clickedBook.userData.isOffset ? 1.5 : 1.2,
-        duration: 0.6,
-        ease: "power1.out"
-        
-    });
-
-    gsap.to(clickedBook.rotation, {
-        y: -Math.PI / 2,
-        duration: 0.6,
-        ease: "power1.out",
-        onComplete: () => {
-            renderer.domElement.style.cursor = 'grab';
-          //  clickedBook.userData.isPulledOut = false;
-        }
-    });
-});
-
-
-// on right click
-renderer.domElement.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
-
-    console.log("Context menu event");
-
-    const rect = renderer.domElement.getBoundingClientRect();
-
-    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-    
-    console.log('Mouse:', mouse.x, mouse.y);
-
-    raycaster.setFromCamera(mouse, camera);
-/////////////////
-    const intersects = raycaster.intersectObjects(books);
-    console.log("Intersects:", intersects.length);
-
-    if (intersects.length === 0) {
-        return;
-    }
-
-    const rightClickedBook = intersects[0].object;
-
-    contextMenuBook = rightClickedBook;
-
-    //
-    if (rightClickedBook === currentlyExaminedBook) {
-        examineButton.style.display = 'none';
-        examineMenuOptions.style.display = 'block';
-    } else {
-        examineButton.style.display = 'block';
-        examineMenuOptions.style.display = 'none';
-    }
-
-    contextMenu.style.left = `${event.clientX - rect.left}px`;
-    contextMenu.style.top = `${event.clientY - rect.top}px`;
-
-    contextMenu.style.display = 'block';
-
-    
-    console.log('Right-cliked book:', rightClickedBook);
-
-});
-
-// examine button click
-examineButton.addEventListener('click', () => {
+// ENTER EXAMINE MODE/STATE
+function enterExamineMode() {
 
     if (!contextMenuBook || currentlyExaminedBook) {
         return;
@@ -611,6 +448,222 @@ examineButton.addEventListener('click', () => {
             camera.updateProjectionMatrix();
         }
     });
+
+}
+
+// EXIT EXAMINE MODE/STATE
+function exitExamineMode() {
+    if (!currentlyExaminedBook) {
+        return;
+    }
+
+    currentlyExaminedBook = null;
+    console.log('Currently examined:', currentlyExaminedBook);
+
+    // vrati kameru na prethodno stanje/ unzoom
+    gsap.to(camera.position, {
+        x: previousCameraPosition.x,
+        y: previousCameraPosition.y,
+        z: previousCameraPosition.z,
+        duration: 0.8,
+        ease: "power2.out",
+        onUpdate: () => {
+            controls.update();
+        }
+    });
+
+    // vrati target
+    gsap.to(controls.target, {
+        x: previousControlsTarget.x,
+        y: previousControlsTarget.y,
+        z: previousControlsTarget.z,
+        duration: 0.8,
+        ease: "power2.out",
+        onUpdate: () => {
+            controls.update();
+        }
+    });
+
+    // vrati zoom
+    gsap.to(camera, {
+        zoom: previousCameraZoom,
+        duration: 0.8,
+        ease: "power2.out",
+        onUpdate: () => {
+            camera.updateProjectionMatrix();
+        }
+    });
+
+}
+
+// RETURN TO SHELF
+function returnBookToShelf(book) {
+
+    if (!book || !book.userData.isPulledOut) {
+        return;
+    }
+
+    if (!book.userData.putSound.isPlaying) {
+        //book.userData.putSound.setPlaybackRate(1.1); // izbrisi ako je zvuk prebrz
+        book.userData.putSound.play();
+    }
+
+    gsap.to(book.position, {
+        x: book.userData.originalPosition.x,
+        y: book.userData.originalPosition.y,
+        z: book.userData.originalPosition.z,
+        duration: 0.7, // 0.6 ako treba bolje uskladiti sa zvukom, da bude malo brza animacija
+        ease: "power1.out"
+    });
+
+    gsap.to(book.rotation, {
+        x: book.userData.originalRotation.x,
+        y: book.userData.originalRotation.y,
+        z: book.userData.originalRotation.z,
+        duration: 0.7, // 0.6 ako treba bolje uskladiti sa zvukom
+        ease: "power1.out",
+        onComplete: () => {
+            renderer.domElement.style.cursor = 'grab';
+        }
+    });
+
+    book.userData.isPulledOut = false;
+
+}
+
+
+// on click
+renderer.domElement.addEventListener('click', (event) => {
+
+    contextMenu.style.display = 'none';
+    contextMenuBook = null;
+    
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects(books);
+    if (intersects.length === 0) {
+        return; // no book clicked
+    }
+
+    const clickedBook = intersects[0].object;
+    renderer.domElement.style.cursor = 'grabbing';
+    
+    if (clickedBook.userData.isPulledOut) {
+
+        // ako je knjiga na koju se klikne ista kao i ona koja se istrazuje, dobijamo true, 
+        // sto znaci: vrati je na policu i postavi examined knjigu na null (jer knjiga je vracena nista se ne istrazuje, sada moze druga knjiga da dodje na red)
+        // ako ako je knjiga na koju se klikne drugacija od one koja se istrazuje, dobijamo false
+        // sto znaci ne ulazi u IF i examined je i dalje zauzet, ne mozemo da istrazujemo nijednu drugu knjigu dok ovu ne vratimo
+        if (clickedBook === currentlyExaminedBook) {
+            exitExamineMode();
+        }
+
+        returnBookToShelf(clickedBook);
+    
+        return; // already pulled out
+    }
+
+    clickedBook.userData.isPulledOut = true;
+
+    if (!clickedBook.userData.pullSound.isPlaying) {
+        clickedBook.userData.pullSound.play();
+    }
+
+    // pull out on z and rotate
+    gsap.to(clickedBook.position, {
+        z: clickedBook.userData.isOffset ? 1.5 : 1.2,
+        duration: 0.6,
+        ease: "power1.out"
+        
+    });
+
+    gsap.to(clickedBook.rotation, {
+        y: -Math.PI / 2,
+        duration: 0.6,
+        ease: "power1.out",
+        onComplete: () => {
+            renderer.domElement.style.cursor = 'grab';
+          //  clickedBook.userData.isPulledOut = false;
+        }
+    });
+});
+
+
+// on right click
+renderer.domElement.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+
+    console.log("Context menu event");
+
+    const rect = renderer.domElement.getBoundingClientRect();
+
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    
+    console.log('Mouse:', mouse.x, mouse.y);
+
+    raycaster.setFromCamera(mouse, camera);
+/////////////////
+    const intersects = raycaster.intersectObjects(books);
+    console.log("Intersects:", intersects.length);
+
+    if (intersects.length === 0) {
+        return;
+    }
+
+    const rightClickedBook = intersects[0].object;
+
+    // ako je neka knjiga vec u examine modu, ne prikazuj context meni za ostale
+    if (currentlyExaminedBook && rightClickedBook !== currentlyExaminedBook) {
+        contextMenu.style.display = 'none';
+        contextMenuBook = null;
+        return;
+    }
+
+    contextMenuBook = rightClickedBook;
+
+    //
+    if (rightClickedBook === currentlyExaminedBook) {
+        examineButton.style.display = 'none';
+        examineMenuOptions.style.display = 'block';
+    } else {
+        examineButton.style.display = 'block';
+        examineMenuOptions.style.display = 'none';
+    }
+
+    contextMenu.style.left = `${event.clientX - rect.left}px`;
+    contextMenu.style.top = `${event.clientY - rect.top}px`;
+
+    contextMenu.style.display = 'block';
+
+    
+    console.log('Right-cliked book:', rightClickedBook);
+
+});
+
+// examine button click
+examineButton.addEventListener('click', () => {
+    enterExamineMode();
+});
+
+// exit button
+exitExamineButton.addEventListener('click', () => {
+    if (!currentlyExaminedBook) {
+        return;
+    }
+
+    const examinedBook = currentlyExaminedBook;
+    // cuva pre postavljanja na null
+
+    exitExamineMode(); // postavi currently exam. na null
+    returnBookToShelf(examinedBook);
+
+    contextMenu.style.display = 'none';
+    contextMenuBook = null;
 });
 
 

@@ -62,8 +62,8 @@ use app\models\BookshelfModel;
 
             <!-- examine state -->
             <div id="examine-menu-options" style="display: none;">
-                <button id="previous-page-btn">Previous page</button>
-                <button id="next-page-btn">Next page</button>
+                <button id="previous-page-btn">Previous page (soon)</button>
+                <button id="next-page-btn">Next page (soon) </button>
                 <button id="exit-examine-btn">Exit</button>
             </div>
         </div>
