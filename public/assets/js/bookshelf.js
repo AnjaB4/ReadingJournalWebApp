@@ -496,6 +496,41 @@ examineButton.addEventListener('click', () => {
     contextMenuBook = null;
 
     console.log('Examining book: ', examinedBook);
+
+    gsap.to(examinedBook.position, {
+        x: 0,
+        y: 0,
+        z: 5,
+        duration: 0.8,
+        ease: "power2.out"
+    });
+
+    gsap.to(camera.position, {
+        x: 0,
+        y: 0,
+        duration: 0.8,
+        ease: "power2.out"
+    });
+
+    gsap.to(controls.target, {
+        x: 0,
+        y: 0,
+        z: 0,
+        duration: 0.8,
+        ease: "power2.out",
+        onUpdate: () => {
+            controls.update();
+        }
+    });
+
+    gsap.to(camera, {
+        zoom: 4,
+        duration: 0.8,
+        ease: "power2.out",
+        onUpdate: () => {
+            camera.updateProjectionMatrix();
+        }
+    });
 });
 
 
