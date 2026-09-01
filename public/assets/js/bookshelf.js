@@ -97,6 +97,11 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 let contextMenuBook = null; //cuvaj knjigu za koju treba prikazati context menu
+let currentlyExaminedBook = null; //koja knjiga se trenutno istrazuje
+let previousCameraPosition = null;
+let previousControlsTarget = null;
+let previousCameraZoom = null;
+
 
 // TEXTURE LOADER
 const loader = new THREE.TextureLoader();
@@ -392,6 +397,47 @@ renderer.domElement.addEventListener('click', (event) => {
     
     if (clickedBook.userData.isPulledOut) {
 
+        // ako je knjiga na koju se klikne ista kao i ona koja se istrazuje, dobijamo true, 
+        // sto znaci: vrati je na policu i postavi examined knjigu na null (jer knjiga je vracena nista se ne istrazuje, sada moze druga knjiga da dodje na red)
+        // ako ako je knjiga na koju se klikne drugacija od one koja se istrazuje, dobijamo false
+        // sto znaci ne ulazi u IF i examined je i dalje zauzet, ne mozemo da istrazujemo nijednu drugu knjigu dok ovu ne vratimo
+        if (clickedBook === currentlyExaminedBook) {
+            currentlyExaminedBook = null;
+            console.log('Currently examined:', currentlyExaminedBook);
+
+            // vrati kameru na prethodno stanje/ unzoom
+            gsap.to(camera.position, {
+                x: previousCameraPosition.x,
+                y: previousCameraPosition.y,
+                z: previousCameraPosition.z,
+                duration: 0.8,
+                ease: "power2.out",
+                onUpdate: () => {
+                    controls.update();
+                }
+            });
+
+            gsap.to(controls.target, {
+                x: previousControlsTarget.x,
+                y: previousControlsTarget.y,
+                z: previousControlsTarget.z,
+                duration: 0.8,
+                ease: "power2.out",
+                onUpdate: () => {
+                    controls.update();
+                }
+            });
+
+            gsap.to(camera, {
+                zoom: previousCameraZoom,
+                duration: 0.8,
+                ease: "power2.out",
+                onUpdate: () => {
+                    camera.updateProjectionMatrix();
+                }
+            });
+        }
+
         if (!clickedBook.userData.putSound.isPlaying) {
             //clickedBook.userData.putSound.setPlaybackRate(1.1); // izbrisi ako je zvuk prebrz
             clickedBook.userData.putSound.play();
@@ -486,18 +532,27 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
 // examine button click
 examineButton.addEventListener('click', () => {
 
-    if (!contextMenuBook) {
+    if (!contextMenuBook || currentlyExaminedBook) {
         return;
     }
 
-    const examinedBook = contextMenuBook;
+    //const examinedBook = contextMenuBook; // lokalna promenljiva cuva vrednost 
+    currentlyExaminedBook = contextMenuBook;
 
+
+    // sacuvaj trenutni pogled kamere
+    previousCameraPosition = camera.position.clone();
+    previousControlsTarget = controls.target.clone();
+    previousCameraZoom = camera.zoom;
+
+    
     contextMenu.style.display = 'none';
     contextMenuBook = null;
 
-    console.log('Examining book: ', examinedBook);
+    console.log('Examining book: ', currentlyExaminedBook);
 
-    gsap.to(examinedBook.position, {
+    // BOOK
+    gsap.to(currentlyExaminedBook.position, {
         x: 0,
         y: 0,
         z: 5,
@@ -505,13 +560,19 @@ examineButton.addEventListener('click', () => {
         ease: "power2.out"
     });
 
+    // CAMERA POS
     gsap.to(camera.position, {
         x: 0,
         y: 0,
+        z: 10,
         duration: 0.8,
-        ease: "power2.out"
+        ease: "power2.out",
+        onUpdate: () => {
+            controls.update();
+        }
     });
 
+    // CAMERA TARGET
     gsap.to(controls.target, {
         x: 0,
         y: 0,
@@ -523,6 +584,7 @@ examineButton.addEventListener('click', () => {
         }
     });
 
+    // ZOOM
     gsap.to(camera, {
         zoom: 4,
         duration: 0.8,
