@@ -5,10 +5,19 @@ import { RoomEnvironment } from '/assets/libs/three/examples/jsm/environments/Ro
 
 
 const container = document.getElementById('bookshelf-container');
+
 const contextMenu = document.getElementById('book-context-menu');
+
 const examineButton = document.getElementById('examine-book-btn');
+
+const examineMenuOptions = document.getElementById('examine-menu-options');
+const previousPageButton = document.getElementById('previous-page-btn');
+const nextPageButton = document.getElementById('next-page-btn');
+const exitExamineButton = document.getElementById('exit-examine-btn');
+
 const width = container.clientWidth;
 const height = container.clientHeight || 600;
+
 
 // SCENE
 const scene = new THREE.Scene();
@@ -518,6 +527,15 @@ renderer.domElement.addEventListener('contextmenu', (event) => {
     const rightClickedBook = intersects[0].object;
 
     contextMenuBook = rightClickedBook;
+
+    //
+    if (rightClickedBook === currentlyExaminedBook) {
+        examineButton.style.display = 'none';
+        examineMenuOptions.style.display = 'block';
+    } else {
+        examineButton.style.display = 'block';
+        examineMenuOptions.style.display = 'none';
+    }
 
     contextMenu.style.left = `${event.clientX - rect.left}px`;
     contextMenu.style.top = `${event.clientY - rect.top}px`;
