@@ -54,8 +54,18 @@ use app\models\BookshelfModel;
             
         </div>
 
+        <!-- CONTEXT MENU -->
         <div id="book-context-menu">
+
+            <!-- normal state -->
             <button id="examine-book-btn">Examine</button>
+
+            <!-- examine state -->
+            <div id="examine-menu-options" style="display: none;">
+                <button id="previous-page-btn">Previous page (soon)</button>
+                <button id="next-page-btn">Next page (soon) </button>
+                <button id="exit-examine-btn">Exit</button>
+            </div>
         </div>
 
         <?php if (empty($books)): ?>
