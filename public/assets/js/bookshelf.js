@@ -105,11 +105,16 @@ controls.touches = {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+// BUTTONS
 let contextMenuBook = null; //cuvaj knjigu za koju treba prikazati context menu
 let currentlyExaminedBook = null; //koja knjiga se trenutno istrazuje
 let previousCameraPosition = null;
 let previousControlsTarget = null;
 let previousCameraZoom = null;
+
+// INFO
+const bookshelfInfoButton = document.getElementById('bookshelf-info-btn');
+const bookshelfInfoPopup = document.getElementById('bookshelf-info-popup');
 
 
 // TEXTURE LOADER
@@ -664,6 +669,23 @@ exitExamineButton.addEventListener('click', () => {
 
     contextMenu.style.display = 'none';
     contextMenuBook = null;
+});
+
+// INFO button
+bookshelfInfoButton.addEventListener('click', (event) => {
+
+    event.stopPropagation();
+
+    if (bookshelfInfoPopup.style.display === 'block') {
+        bookshelfInfoPopup.style.display = 'none';
+    } else {
+        bookshelfInfoPopup.style.display = 'block';
+    }
+
+});
+
+document.addEventListener('click', () => {
+    bookshelfInfoPopup.style.display = 'none';
 });
 
 

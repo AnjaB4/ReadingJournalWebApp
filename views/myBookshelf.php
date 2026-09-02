@@ -13,12 +13,45 @@ use app\models\BookshelfModel;
 <div class="card">
     <div class="card-header pb-0">
         <div class="d-flex align-items-center">
-            <h6>My Bookshelf</h6>
+            <h6>My Bookshelf  
+                <sup>
+                <i class="fa fa-info-circle" id="bookshelf-info-btn" role="button"></i>
+                </sup>
+            </h6>
+
+        </div>
+    </div>
+
+    <div id="bookshelf-info-popup">
+        <h6>My Bookshelf Controls</h6>
+
+        <div class="bookshelf-info-item">
+            <strong>Left click:</strong> Pull out / put back book
+        </div>
+
+        <div class="bookshelf-info-item">
+            <strong>Right click and drag:</strong> Rotate camera
+        </div>
+
+        <div class="bookshelf-info-item">
+            <strong>Drag:</strong> Move around the bookshelf
+        </div>
+
+        <div class="bookshelf-info-item">
+            <strong>Scroll:</strong> Zoom in / out
+        </div>
+
+        <div class="bookshelf-info-item">
+            <strong>Right click on book:</strong> Open book options
+        </div>
+
+        <div class="bookshelf-info-item">
+            <strong>Examine:</strong> Inspect a selected book
         </div>
     </div>
 
     
-<!--
+    <!--
     <div class="card-body px-4 pt-4 pb-2 d-flex flex-row justify-content-start">
 
         <div class="p-2 px-2 pt-0 pb-2 d-flex align-items-center">
