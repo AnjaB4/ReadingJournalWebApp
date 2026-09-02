@@ -6,7 +6,7 @@
     min-width: 120px;
     padding: 6px;
 
-    background: white;
+    background: rgb(255, 255, 255);
     border: 1px solid #ddd;
     border-radius: 6px;
 
@@ -24,5 +24,21 @@
 }
 
 #book-context-menu button:hover {
-    background: #f0f0f0;
+    background: #a7cbca41;
+}
+
+
+#bookshelf-info-popup {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+
+    width: 280px;
+    padding: 15px;
+
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
