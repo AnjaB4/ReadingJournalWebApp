@@ -26,7 +26,7 @@ class BookshelfController extends BaseController
         $bsModel = new BookshelfModel();
         $bgModel = new BookGenresModel();
 
-        $books = $bsModel->getFinishedBooks($userId);
+        $books = $bsModel->getBooksByStatus($userId, 'completed');
 
         foreach ($books as &$book) {
             $book['genres'] = $bgModel->getGenresOfBook($book['id']);
