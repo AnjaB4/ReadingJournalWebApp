@@ -31,7 +31,7 @@ class AchievementController extends BaseController
 
         // zbog odabira procitanih knjige za achievement tasks
         $bsModel = new BookshelfModel();
-        $books = $bsModel->getFinishedBooks($userId);
+        $books = $bsModel->getBooksByStatus($userId, 'completed');
 
         // vec sacuvani taskovi trenutnog usera
         $userAchievementTaskModel = new UserAchievementTaskModel();
